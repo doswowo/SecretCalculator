@@ -68,6 +68,47 @@
 
     </LinearLayout>
 
+    <!-- 主页内容（收藏夹网格） -->
+    <ScrollView
+        android:id="@+id/homeView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="快捷访问"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp"/>
+
+            <GridLayout
+                android:id="@+id/bookmarkGrid"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="3"
+                android:rowCount="10"
+                android:useDefaultMargins="true"/>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <!-- WebView -->
+    <WebView
+        android:id="@+id/webView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
     <!-- 底部工具栏 -->
     <LinearLayout
         android:layout_width="match_parent"
@@ -125,12 +166,5 @@
             android:visibility="gone"/>
 
     </LinearLayout>
-
-    <!-- WebView -->
-    <WebView
-        android:id="@+id/webView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"/>
 
 </LinearLayout>

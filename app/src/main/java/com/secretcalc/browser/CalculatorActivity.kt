@@ -16,7 +16,7 @@ class CalculatorActivity : AppCompatActivity() {
     private var currentOperator: String? = null
     private var firstOperand: Double? = null
     private var lastResult: Double? = null
-    private var shouldClearOnNextDigit = false
+    private var justCalculated = false  // 刚计算完，等待输入密码
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,9 +28,10 @@ class CalculatorActivity : AppCompatActivity() {
         val btn = view as Button
         val digit = btn.text.toString()
 
-        if (shouldClearOnNextDigit) {
+        // 如果刚计算完且用户输入数字，清空输入开始输入密码
+        if (justCalculated) {
             currentInput.clear()
-            shouldClearOnNextDigit = false
+            justCalculated = false
         }
 
         if (digit == "." && currentInput.contains(".")) return
@@ -62,23 +63,29 @@ class CalculatorActivity : AppCompatActivity() {
         }
 
         currentOperator = op
+        justCalculated = false
         currentInput.clear()
         updateDisplay()
     }
 
     fun onEqualsClick(view: View) {
-        if (firstOperand == null && lastResult == null) return
         if (currentOperator == null) {
-            // 密码触发机制：按=后输入结果数字
-            if (currentInput.isNotEmpty()) {
+            // 没有运算符，检查是否是密码输入
+            if (currentInput.isNotEmpty() && justCalculated) {
+                // 用户刚算完结果，现在输入数字后按等号
                 checkSecretCode()
+                return
+            } else if (currentInput.isEmpty() && lastResult != null) {
+                // 用户按等号但没有输入，检查是否是直接输入密码后按等号
+                // 这种情况是用户直接输入数字后按等号
+                return
             }
             return
         }
 
         calculate()
         currentOperator = null
-        shouldClearOnNextDigit = true
+        justCalculated = true  // 标记：刚计算完，等待输入密码
     }
 
     private fun calculate() {
@@ -111,7 +118,7 @@ class CalculatorActivity : AppCompatActivity() {
             currentInput.clear()
             currentOperator = null
             firstOperand = null
-            shouldClearOnNextDigit = false
+            justCalculated = false
             updateDisplay()
             startActivity(Intent(this, BrowserActivity::class.java))
         } else {
@@ -137,7 +144,7 @@ class CalculatorActivity : AppCompatActivity() {
         currentOperator = null
         firstOperand = null
         lastResult = null
-        shouldClearOnNextDigit = false
+        justCalculated = false
         updateDisplay()
     }
 
