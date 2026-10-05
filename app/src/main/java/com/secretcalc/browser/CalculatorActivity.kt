@@ -1,9 +1,12 @@
 package com.secretcalc.browser
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import java.math.BigDecimal
@@ -12,16 +15,25 @@ import java.math.RoundingMode
 class CalculatorActivity : AppCompatActivity() {
 
     private lateinit var display: TextView
+    private lateinit var expressionView: TextView
+    private lateinit var historyList: LinearLayout
+
     private var currentInput = StringBuilder()
     private var currentOperator: String? = null
     private var firstOperand: Double? = null
     private var lastResult: Double? = null
     private var justCalculated = false
+    private var lastFormula = ""
+    private val history = ArrayList<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_calculator)
         display = findViewById(R.id.tvDisplay)
+        expressionView = findViewById(R.id.tvExpression)
+        historyList = findViewById(R.id.historyList)
+        loadHistory()
+        renderHistory()
         updateDisplay()
     }
 
@@ -31,6 +43,7 @@ class CalculatorActivity : AppCompatActivity() {
             currentInput.clear()
             firstOperand = null
             currentOperator = null
+            lastFormula = ""
             justCalculated = false
         }
         if (digit == "." && currentInput.contains(".")) return
@@ -42,7 +55,12 @@ class CalculatorActivity : AppCompatActivity() {
 
     fun onOperatorClick(view: View) {
         val op = (view as Button).text.toString()
-        justCalculated = false
+        if (justCalculated) {
+            firstOperand = lastResult
+            currentInput.clear()
+            lastFormula = ""
+            justCalculated = false
+        }
 
         if (currentInput.isEmpty() && firstOperand == null) {
             if (lastResult != null) {
@@ -56,7 +74,7 @@ class CalculatorActivity : AppCompatActivity() {
             if (firstOperand == null) {
                 firstOperand = currentInput.toString().toDoubleOrNull() ?: return
             } else if (currentOperator != null) {
-                calculate()
+                calculate(false)
             }
         }
 
@@ -67,18 +85,20 @@ class CalculatorActivity : AppCompatActivity() {
 
     fun onEqualsClick(view: View) {
         if (currentOperator != null) {
-            calculate()
+            calculate(true)
             currentOperator = null
             justCalculated = true
+            updateDisplay()
             return
         }
         tryUnlock()
     }
 
-    private fun calculate() {
+    private fun calculate(recordHistory: Boolean) {
         if (firstOperand == null || currentOperator == null) return
         if (currentInput.isEmpty()) return
         val secondOperand = currentInput.toString().toDoubleOrNull() ?: return
+        val formula = "${formatResult(firstOperand!!)}$currentOperator${formatResult(secondOperand)}"
         val result = when (currentOperator) {
             "+" -> firstOperand!! + secondOperand
             "-" -> firstOperand!! - secondOperand
@@ -88,8 +108,12 @@ class CalculatorActivity : AppCompatActivity() {
         }
         lastResult = result
         firstOperand = result
+        lastFormula = formula
         currentInput.clear()
         currentInput.append(formatResult(result))
+        if (recordHistory) {
+            addHistory("$formula = ${formatResult(result)}")
+        }
         updateDisplay()
     }
 
@@ -124,10 +148,14 @@ class CalculatorActivity : AppCompatActivity() {
         firstOperand = null
         lastResult = null
         justCalculated = false
+        lastFormula = ""
     }
 
     fun onPercentClick(view: View) {
-        justCalculated = false
+        if (justCalculated) {
+            justCalculated = false
+            lastFormula = ""
+        }
         if (currentInput.isEmpty() && firstOperand != null) {
             val value = firstOperand!! / 100
             firstOperand = value
@@ -143,7 +171,10 @@ class CalculatorActivity : AppCompatActivity() {
     }
 
     fun onNegateClick(view: View) {
-        justCalculated = false
+        if (justCalculated) {
+            justCalculated = false
+            lastFormula = ""
+        }
         if (currentInput.isEmpty() && firstOperand != null) {
             firstOperand = -firstOperand!!
             currentInput.clear()
@@ -157,11 +188,66 @@ class CalculatorActivity : AppCompatActivity() {
         }
     }
 
+    private fun currentExpression(): String {
+        if (justCalculated) return lastFormula
+        val first = firstOperand?.let { formatResult(it) } ?: ""
+        val op = currentOperator ?: ""
+        val second = currentInput.toString()
+        return when {
+            op.isNotEmpty() -> first + op + second
+            second.isNotEmpty() -> second
+            first.isNotEmpty() -> first
+            else -> ""
+        }
+    }
+
     private fun updateDisplay() {
+        expressionView.text = currentExpression()
         display.text = when {
+            justCalculated && lastResult != null -> formatResult(lastResult!!)
             currentInput.isNotEmpty() -> currentInput.toString()
             firstOperand != null -> formatResult(firstOperand!!)
             else -> "0"
+        }
+    }
+
+    private fun addHistory(line: String) {
+        history.add(0, line)
+        while (history.size > 5) history.removeAt(history.lastIndex)
+        getSharedPreferences("calc", MODE_PRIVATE)
+            .edit()
+            .putString("history", history.joinToString("\n"))
+            .apply()
+        renderHistory()
+    }
+
+    private fun loadHistory() {
+        history.clear()
+        val saved = getSharedPreferences("calc", MODE_PRIVATE).getString("history", "") ?: ""
+        if (saved.isNotBlank()) {
+            history.addAll(saved.split("\n").filter { it.isNotBlank() }.take(5))
+        }
+    }
+
+    private fun renderHistory() {
+        historyList.removeAllViews()
+        if (history.isEmpty()) {
+            historyList.addView(historyRow("暂无记录", Color.parseColor("#8E8E93")))
+            return
+        }
+        for (line in history) {
+            historyList.addView(historyRow(line, Color.parseColor("#FFFFFF")))
+        }
+    }
+
+    private fun historyRow(text: String, color: Int): TextView {
+        return TextView(this).apply {
+            this.text = text
+            setTextColor(color)
+            textSize = 15f
+            gravity = Gravity.END
+            setPadding(0, 6, 0, 6)
+            maxLines = 1
         }
     }
 }

@@ -10,9 +10,23 @@
         android:layout_height="wrap_content"
         android:text="计算器"
         android:textColor="#FFFFFF"
-        android:textSize="24sp"
+        android:textSize="16sp"
         android:gravity="center"
-        android:padding="16dp"/>
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp"/>
+
+    <TextView
+        android:id="@+id/tvExpression"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textColor="#8E8E93"
+        android:textSize="18sp"
+        android:gravity="end"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="4dp"
+        android:maxLines="1"
+        android:ellipsize="start"/>
 
     <TextView
         android:id="@+id/tvDisplay"
@@ -20,10 +34,11 @@
         android:layout_height="wrap_content"
         android:text="0"
         android:textColor="#FFFFFF"
-        android:textSize="48sp"
+        android:textSize="36sp"
         android:gravity="end"
-        android:paddingHorizontal="24dp"
-        android:paddingVertical="16dp"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="2dp"
+        android:paddingBottom="8dp"
         android:maxLines="1"
         android:ellipsize="start"/>
 
@@ -33,7 +48,7 @@
         android:layout_weight="1"
         android:columnCount="4"
         android:rowCount="5"
-        android:padding="8dp">
+        android:padding="6dp">
 
         <Button android:text="AC" android:onClick="onClearClick" style="@style/CalcButtonOp"/>
         <Button android:text="+/-" android:onClick="onNegateClick" style="@style/CalcButtonOp"/>
@@ -60,5 +75,31 @@
         <Button android:text="=" android:onClick="onEqualsClick" style="@style/CalcButtonEquals"/>
 
     </GridLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="168dp"
+        android:orientation="vertical"
+        android:background="#111111"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="12dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="最近运算"
+            android:textColor="#8E8E93"
+            android:textSize="13sp"
+            android:paddingBottom="4dp"/>
+
+        <LinearLayout
+            android:id="@+id/historyList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"/>
+
+    </LinearLayout>
 
 </LinearLayout>
