@@ -1,13 +1,12 @@
 package com.secretcalc.browser
 
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
-import kotlinx.android.synthetic.main.activity_history.*
-import kotlinx.android.synthetic.main.activity_bookmark.*
 
 class HistoryActivity : AppCompatActivity() {
 
@@ -19,34 +18,27 @@ class HistoryActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_history)
 
-        db = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "browser_db").build()
+        db = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "browser_db")
+            .allowMainThreadQueries()
+            .fallbackToDestructiveMigration()
+            .build()
         historyDao = db.historyDao()
 
+        val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
-        adapter = HistoryAdapter(this) { entry ->
-            loadUrl(entry.url)
-        }
+        adapter = HistoryAdapter(this) { }
         recyclerView.adapter = adapter
-
         loadHistory()
     }
 
     private fun loadHistory() {
         Thread {
             val list = historyDao.getAll()
-            runOnUiThread {
-                adapter.submitList(list)
-            }
+            runOnUiThread { adapter.submitList(list) }
         }.start()
     }
 
-    private fun loadUrl(url: String) {
-        val result = Intent().apply { putExtra("url", url) }
-        setResult(RESULT_OK, result)
-        finish()
-    }
-
-    fun onClearHistory(view: android.view.View) {
+    fun onClearHistory(view: View) {
         Thread {
             historyDao.clearAll()
             runOnUiThread {

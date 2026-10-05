@@ -1,14 +1,16 @@
 package com.secretcalc.browser
 
-import androidx.room.Entity
-import androidx.room.Insert
-import androidx.room.Query
 import androidx.room.Dao
 import androidx.room.Database
+import androidx.room.Entity
+import androidx.room.Insert
+import androidx.room.PrimaryKey
+import androidx.room.Query
 import androidx.room.RoomDatabase
 
 @Entity(tableName = "history")
 data class HistoryEntry(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val url: String,
     val title: String,
     val timestamp: Long
@@ -28,6 +30,7 @@ interface HistoryDao {
 
 @Entity(tableName = "bookmarks")
 data class BookmarkEntry(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val url: String,
     val title: String,
     val timestamp: Long

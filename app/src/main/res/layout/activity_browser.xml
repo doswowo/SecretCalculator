@@ -5,7 +5,6 @@
     android:orientation="vertical"
     android:background="#FFFFFF">
 
-    <!-- 顶部栏 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
@@ -35,7 +34,6 @@
 
     </LinearLayout>
 
-    <!-- 进度条 -->
     <ProgressBar
         android:id="@+id/progressBar"
         style="@android:style/Widget.ProgressBar.Horizontal"
@@ -44,7 +42,6 @@
         android:max="100"
         android:visibility="gone"/>
 
-    <!-- 地址栏 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="48dp"
@@ -63,18 +60,17 @@
             android:textSize="14sp"
             android:paddingHorizontal="12dp"
             android:singleLine="true"
-            android:imeOptions="actionSearch"
+            android:imeOptions="actionGo"
             android:inputType="textUri"/>
 
     </LinearLayout>
 
-    <!-- 主页内容（收藏夹网格） -->
     <ScrollView
         android:id="@+id/homeView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:visibility="gone">
+        android:visibility="visible">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -85,7 +81,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="快捷访问"
+                android:text="收藏网址"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="12dp"/>
@@ -95,21 +91,20 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:columnCount="3"
-                android:rowCount="10"
-                android:useDefaultMargins="true"/>
+                android:alignmentMode="alignMargins"
+                android:useDefaultMargins="false"/>
 
         </LinearLayout>
 
     </ScrollView>
 
-    <!-- WebView -->
     <WebView
         android:id="@+id/webView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"/>
+        android:layout_weight="1"
+        android:visibility="gone"/>
 
-    <!-- 底部工具栏 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
@@ -122,7 +117,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:src="@android:drawable/ic_menu_revert"
+            android:src="@android:drawable/ic_media_previous"
             android:background="?attr/selectableItemBackground"
             android:contentDescription="后退"
             android:alpha="0.3"/>
@@ -132,7 +127,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:src="@android:drawable/ic_menu_share"
+            android:src="@android:drawable/ic_media_next"
             android:background="?attr/selectableItemBackground"
             android:contentDescription="前进"
             android:alpha="0.3"/>
@@ -142,7 +137,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:src="@android:drawable/ic_menu_home"
+            android:src="@android:drawable/ic_menu_compass"
             android:background="?attr/selectableItemBackground"
             android:contentDescription="主页"/>
 
@@ -151,7 +146,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:src="@android:drawable/ic_menu_rotate"
+            android:src="@android:drawable/ic_popup_sync"
             android:background="?attr/selectableItemBackground"
             android:contentDescription="刷新"/>
 

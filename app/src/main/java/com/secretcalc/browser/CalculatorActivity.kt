@@ -16,39 +16,37 @@ class CalculatorActivity : AppCompatActivity() {
     private var currentOperator: String? = null
     private var firstOperand: Double? = null
     private var lastResult: Double? = null
-    private var justCalculated = false  // 刚计算完，等待输入密码
+    private var justCalculated = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_calculator)
         display = findViewById(R.id.tvDisplay)
-    }
-
-    fun onDigitClick(view: View) {
-        val btn = view as Button
-        val digit = btn.text.toString()
-
-        // 如果刚计算完且用户输入数字，清空输入开始输入密码
-        if (justCalculated) {
-            currentInput.clear()
-            justCalculated = false
-        }
-
-        if (digit == "." && currentInput.contains(".")) return
-        if (currentInput.length > 15) return
-
-        currentInput.append(digit)
         updateDisplay()
     }
 
+    fun onDigitClick(view: View) {
+        val digit = (view as Button).text.toString()
+        if (justCalculated) {
+            currentInput.clear()
+            firstOperand = null
+            currentOperator = null
+            justCalculated = false
+        }
+        if (digit == "." && currentInput.contains(".")) return
+        if (currentInput.length >= 15) return
+        currentInput.append(digit)
+        updateDisplay()
+        tryUnlock()
+    }
+
     fun onOperatorClick(view: View) {
-        val btn = view as Button
-        val op = btn.text.toString()
+        val op = (view as Button).text.toString()
+        justCalculated = false
 
         if (currentInput.isEmpty() && firstOperand == null) {
             if (lastResult != null) {
                 firstOperand = lastResult
-                currentInput.clear()
             } else {
                 return
             }
@@ -63,35 +61,23 @@ class CalculatorActivity : AppCompatActivity() {
         }
 
         currentOperator = op
-        justCalculated = false
         currentInput.clear()
         updateDisplay()
     }
 
     fun onEqualsClick(view: View) {
-        if (currentOperator == null) {
-            // 没有运算符，检查是否是密码输入
-            if (currentInput.isNotEmpty() && justCalculated) {
-                // 用户刚算完结果，现在输入数字后按等号
-                checkSecretCode()
-                return
-            } else if (currentInput.isEmpty() && lastResult != null) {
-                // 用户按等号但没有输入，检查是否是直接输入密码后按等号
-                // 这种情况是用户直接输入数字后按等号
-                return
-            }
+        if (currentOperator != null) {
+            calculate()
+            currentOperator = null
+            justCalculated = true
             return
         }
-
-        calculate()
-        currentOperator = null
-        justCalculated = true  // 标记：刚计算完，等待输入密码
+        tryUnlock()
     }
 
     private fun calculate() {
         if (firstOperand == null || currentOperator == null) return
         if (currentInput.isEmpty()) return
-
         val secondOperand = currentInput.toString().toDoubleOrNull() ?: return
         val result = when (currentOperator) {
             "+" -> firstOperand!! + secondOperand
@@ -100,7 +86,6 @@ class CalculatorActivity : AppCompatActivity() {
             "÷" -> if (secondOperand != 0.0) firstOperand!! / secondOperand else Double.NaN
             else -> return
         }
-
         lastResult = result
         firstOperand = result
         currentInput.clear()
@@ -108,47 +93,41 @@ class CalculatorActivity : AppCompatActivity() {
         updateDisplay()
     }
 
-    private fun checkSecretCode() {
-        val input = currentInput.toString().toDoubleOrNull() ?: return
-        val storedCode = getSharedPreferences("secret", MODE_PRIVATE).getInt("code", 123456)
-
-        if (input.toInt() == storedCode) {
-            // 密码正确，启动浏览器
-            lastResult = null
-            currentInput.clear()
-            currentOperator = null
-            firstOperand = null
-            justCalculated = false
-            updateDisplay()
-            startActivity(Intent(this, BrowserActivity::class.java))
-        } else {
-            // 密码错误，清空
-            clearAll(view)
-        }
+    private fun tryUnlock() {
+        if (currentOperator != null) return
+        val input = currentInput.toString()
+        if (!PinStore.isValid(input)) return
+        if (input != PinStore.get(this)) return
+        resetState()
+        updateDisplay()
+        startActivity(Intent(this, BrowserActivity::class.java))
     }
 
     private fun formatResult(value: Double): String {
+        if (value.isNaN()) return "错误"
+        if (value.isInfinite()) return "错误"
         return if (value == value.toLong().toDouble()) {
             value.toLong().toString()
         } else {
-            BigDecimal(value).setScale(8, RoundingMode.HALF_UP).stripTrailingZeros().toString()
+            BigDecimal(value.toString()).setScale(8, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
         }
     }
 
     fun onClearClick(view: View) {
-        clearAll(view)
+        resetState()
+        updateDisplay()
     }
 
-    private fun clearAll(view: View) {
+    private fun resetState() {
         currentInput.clear()
         currentOperator = null
         firstOperand = null
         lastResult = null
         justCalculated = false
-        updateDisplay()
     }
 
     fun onPercentClick(view: View) {
+        justCalculated = false
         if (currentInput.isEmpty() && firstOperand != null) {
             val value = firstOperand!! / 100
             firstOperand = value
@@ -157,14 +136,14 @@ class CalculatorActivity : AppCompatActivity() {
             updateDisplay()
         } else if (currentInput.isNotEmpty()) {
             val value = currentInput.toString().toDoubleOrNull() ?: return
-            val result = value / 100
             currentInput.clear()
-            currentInput.append(formatResult(result))
+            currentInput.append(formatResult(value / 100))
             updateDisplay()
         }
     }
 
     fun onNegateClick(view: View) {
+        justCalculated = false
         if (currentInput.isEmpty() && firstOperand != null) {
             firstOperand = -firstOperand!!
             currentInput.clear()
@@ -172,19 +151,17 @@ class CalculatorActivity : AppCompatActivity() {
             updateDisplay()
         } else if (currentInput.isNotEmpty()) {
             val value = currentInput.toString().toDoubleOrNull() ?: return
-            val result = -value
             currentInput.clear()
-            currentInput.append(formatResult(result))
+            currentInput.append(formatResult(-value))
             updateDisplay()
         }
     }
 
     private fun updateDisplay() {
-        val text = when {
+        display.text = when {
             currentInput.isNotEmpty() -> currentInput.toString()
             firstOperand != null -> formatResult(firstOperand!!)
             else -> "0"
         }
-        display.text = text
     }
 }

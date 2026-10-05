@@ -1,38 +1,20 @@
 # SecretCalculator
 
-A privacy calculator app that looks like a normal calculator but hides a lightweight browser.
+看起来是普通计算器，输入 6 位密码后进入内置浏览器。
 
-## Features
+## 使用方式
 
-- **Calculator**: Full-featured calculator with basic operations
-- **Secret Browser**: Enter result (default: 123456) after pressing "=" to open browser
-- **Browser Features**:
-  - WebView-based lightweight browser
-  - History tracking
-  - Bookmark/favorites
-  - Forward/Back navigation
-  - Refresh/Stop page loading
-  - Home button
+1. 打开应用，计算器可以直接做加减乘除运算。
+2. 在计算器里输入 6 位密码即可进入浏览器（默认密码 `000000`）。
+3. 浏览器主页上方是网址输入框，下方是收藏网址，每行 3 个。
+4. 进入浏览器后，点右上角菜单里的「修改密码」，可改成新的 6 位数字密码。
 
-## How to Use
+## 默认密码
 
-1. Open the app - you'll see a normal calculator
-2. Do any calculation (e.g., 100 + 23 = 123)
-3. Press the result number (123456)
-4. Press "=" again
-5. If password matches, browser opens!
+`000000`
 
-## Default Password
+修改路径：浏览器右上角菜单 -> 修改密码。
 
-The default secret code is **123456**
+## 构建
 
-To change it, modify this line in `CalculatorActivity.kt`:
-```kotlin
-val storedCode = getSharedPreferences("secret", MODE_PRIVATE).getInt("code", 123456)
-```
-
-## Build
-
-This project uses GitHub Actions to automatically build the APK on every push.
-
-The APK will be available as a GitHub Actions artifact after the build completes.
+推送到 `main` 后，GitHub Actions 会自动编译 APK，产物在 Actions 的 `app-release` artifact 中。

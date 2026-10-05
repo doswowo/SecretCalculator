@@ -1,12 +1,10 @@
 package com.secretcalc.browser
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
-import kotlinx.android.synthetic.main.activity_bookmark.*
 
 class BookmarkActivity : AppCompatActivity() {
 
@@ -18,30 +16,23 @@ class BookmarkActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_bookmark)
 
-        db = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "browser_db").build()
+        db = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "browser_db")
+            .allowMainThreadQueries()
+            .fallbackToDestructiveMigration()
+            .build()
         bookmarkDao = db.bookmarkDao()
 
+        val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
-        adapter = BookmarkAdapter(this) { entry ->
-            loadUrl(entry.url)
-        }
+        adapter = BookmarkAdapter(this) { }
         recyclerView.adapter = adapter
-
         loadBookmarks()
     }
 
     private fun loadBookmarks() {
         Thread {
             val list = bookmarkDao.getAll()
-            runOnUiThread {
-                adapter.submitList(list)
-            }
+            runOnUiThread { adapter.submitList(list) }
         }.start()
-    }
-
-    private fun loadUrl(url: String) {
-        val result = Intent().apply { putExtra("url", url) }
-        setResult(RESULT_OK, result)
-        finish()
     }
 }

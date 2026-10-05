@@ -8,7 +8,6 @@ import android.view.Gravity
 import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
-import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
@@ -18,8 +17,10 @@ import android.widget.EditText
 import android.widget.GridLayout
 import android.widget.ImageButton
 import android.widget.LinearLayout
+import android.widget.PopupMenu
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.room.Room
 
@@ -48,7 +49,6 @@ class BrowserActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_browser)
-
         initViews()
         initDatabase()
         initWebView()
@@ -69,20 +69,16 @@ class BrowserActivity : AppCompatActivity() {
         homeView = findViewById(R.id.homeView)
         bookmarkGrid = findViewById(R.id.bookmarkGrid)
 
-        btnBack.setOnClickListener { 
-            if (showingHome) {
-                finish()
-            } else if (webView.canGoBack()) {
-                webView.goBack()
+        btnBack.setOnClickListener {
+            when {
+                showingHome -> finish()
+                webView.canGoBack() -> webView.goBack()
+                else -> showHome()
             }
         }
         btnForward.setOnClickListener { if (webView.canGoForward()) webView.goForward() }
-        btnRefresh.setOnClickListener { 
-            if (showingHome) {
-                showHome()
-            } else {
-                webView.reload()
-            }
+        btnRefresh.setOnClickListener {
+            if (showingHome) showHome() else webView.reload()
         }
         btnStop.setOnClickListener { webView.stopLoading() }
         btnHome.setOnClickListener { showHome() }
@@ -91,14 +87,17 @@ class BrowserActivity : AppCompatActivity() {
         urlInput.setOnKeyListener { _, keyCode, event ->
             if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN) {
                 val url = urlInput.text.toString().trim()
-                loadUrl(url)
+                if (url.isNotEmpty()) loadUrl(url)
                 true
             } else false
         }
     }
 
     private fun initDatabase() {
-        db = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "browser_db").build()
+        db = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "browser_db")
+            .allowMainThreadQueries()
+            .fallbackToDestructiveMigration()
+            .build()
         historyDao = db.historyDao()
         bookmarkDao = db.bookmarkDao()
     }
@@ -135,24 +134,15 @@ class BrowserActivity : AppCompatActivity() {
                 btnRefresh.visibility = View.VISIBLE
                 btnStop.visibility = View.GONE
                 updateNavButtons()
-
                 url?.let { saveHistory(it, view?.title ?: "") }
             }
 
             override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
                 super.onReceivedError(view, request, error)
-                if (request?.isForMainFrame == true) {
-                    webView.loadUrl("file:///android_asset/error.html")
-                }
             }
         }
 
-        webView.webChromeClient = object : ChromeClient() {
-            override fun onReceivedTitle(view: WebView?, title: String?) {
-                super.onReceivedTitle(view, title)
-                tvTitle.text = title ?: ""
-            }
-        }
+        webView.webChromeClient = ChromeClient(progressBar, tvTitle)
     }
 
     private fun showHome() {
@@ -163,6 +153,7 @@ class BrowserActivity : AppCompatActivity() {
         urlInput.setText("")
         currentUrl = ""
         loadBookmarks()
+        updateNavButtons()
     }
 
     private fun loadBookmarks() {
@@ -170,9 +161,7 @@ class BrowserActivity : AppCompatActivity() {
             val bookmarks = bookmarkDao.getAll()
             runOnUiThread {
                 bookmarkGrid.removeAllViews()
-                
-                // 默认快捷方式
-                val defaultBookmarks = listOf(
+                val defaults = listOf(
                     Pair("Google", "https://www.google.com"),
                     Pair("百度", "https://www.baidu.com"),
                     Pair("Bing", "https://www.bing.com"),
@@ -180,16 +169,9 @@ class BrowserActivity : AppCompatActivity() {
                     Pair("微博", "https://weibo.com"),
                     Pair("GitHub", "https://github.com")
                 )
-
-                val allBookmarks = if (bookmarks.isEmpty()) {
-                    defaultBookmarks
-                } else {
-                    bookmarks.map { Pair(it.title, it.url) }
-                }
-
-                for ((title, url) in allBookmarks) {
-                    val item = createBookmarkItem(title, url)
-                    bookmarkGrid.addView(item)
+                val all = if (bookmarks.isEmpty()) defaults else bookmarks.map { Pair(it.title, it.url) }
+                for ((title, url) in all) {
+                    bookmarkGrid.addView(createBookmarkItem(title, url))
                 }
             }
         }.start()
@@ -199,7 +181,7 @@ class BrowserActivity : AppCompatActivity() {
         val item = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            setPadding(16, 24, 16, 24)
+            setPadding(12, 20, 12, 20)
             setBackgroundColor(Color.parseColor("#F5F5F5"))
             layoutParams = GridLayout.LayoutParams().apply {
                 width = 0
@@ -211,9 +193,10 @@ class BrowserActivity : AppCompatActivity() {
         }
 
         val icon = TextView(this).apply {
-            text = getFavicon(title)
-            textSize = 28f
+            text = title.take(1)
+            textSize = 22f
             gravity = Gravity.CENTER
+            setTextColor(Color.parseColor("#007AFF"))
         }
 
         val label = TextView(this).apply {
@@ -222,9 +205,10 @@ class BrowserActivity : AppCompatActivity() {
             gravity = Gravity.CENTER
             setTextColor(Color.parseColor("#333333"))
             maxLines = 1
-            val marginParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-            marginParams.topMargin = 8
-            layoutParams = marginParams
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = 8 }
         }
 
         item.addView(icon)
@@ -232,33 +216,12 @@ class BrowserActivity : AppCompatActivity() {
         return item
     }
 
-    private fun getFavicon(title: String): String {
-        return when {
-            title.contains("Google") -> "🔍"
-            title.contains("百度") -> "🌐"
-            title.contains("Bing") -> "🌐"
-            title.contains("知乎") -> "💬"
-            title.contains("微博") -> "📱"
-            title.contains("GitHub") -> "🐙"
-            title.contains("bilibili") || title.contains("B站") -> "📺"
-            title.contains("YouTube") -> "▶️"
-            title.contains("微信") -> "💬"
-            title.contains("淘宝") -> "🛒"
-            title.contains("京东") -> "🛒"
-            title.contains("QQ") -> "💬"
-            else -> "📄"
-        }
-    }
-
     private fun loadUrl(url: String) {
-        val finalUrl = if (!url.startsWith("http://") && !url.startsWith("https://")) {
-            if (url.contains(".") && !url.contains(" ")) {
-                "https://$url"
-            } else {
-                "https://www.google.com/search?q=$url"
-            }
-        } else url
-
+        val finalUrl = when {
+            url.startsWith("http://") || url.startsWith("https://") -> url
+            url.contains(".") && !url.contains(" ") -> "https://$url"
+            else -> "https://www.google.com/search?q=$url"
+        }
         showingHome = false
         homeView.visibility = View.GONE
         webView.visibility = View.VISIBLE
@@ -269,26 +232,27 @@ class BrowserActivity : AppCompatActivity() {
 
     private fun saveHistory(url: String, title: String) {
         Thread {
-            val entry = HistoryEntry(url = url, title = title, timestamp = System.currentTimeMillis())
-            historyDao.insert(entry)
+            historyDao.insert(HistoryEntry(url = url, title = title, timestamp = System.currentTimeMillis()))
         }.start()
     }
 
     private fun updateNavButtons() {
-        btnBack.alpha = if (webView.canGoBack()) 1f else 0.3f
+        btnBack.alpha = if (showingHome || webView.canGoBack()) 1f else 0.3f
         btnForward.alpha = if (webView.canGoForward()) 1f else 0.3f
     }
 
     private fun showMenu() {
-        val popup = android.widget.PopupMenu(this, btnMenu)
+        val popup = PopupMenu(this, btnMenu)
         popup.menu.add(0, 1, 0, "历史记录")
         popup.menu.add(0, 2, 1, "收藏夹")
         popup.menu.add(0, 3, 2, "添加收藏")
+        popup.menu.add(0, 4, 3, "修改密码")
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 1 -> startActivity(Intent(this, HistoryActivity::class.java))
-                2 -> addBookmark()
-                3 -> startActivity(Intent(this, BookmarkActivity::class.java))
+                2 -> startActivity(Intent(this, BookmarkActivity::class.java))
+                3 -> addBookmark()
+                4 -> startActivity(Intent(this, ChangePasswordActivity::class.java))
             }
             true
         }
@@ -296,30 +260,33 @@ class BrowserActivity : AppCompatActivity() {
     }
 
     private fun addBookmark() {
-        if (currentUrl.isEmpty()) return
+        if (currentUrl.isEmpty()) {
+            Toast.makeText(this, "当前没有可收藏的页面", Toast.LENGTH_SHORT).show()
+            return
+        }
         Thread {
             val exists = bookmarkDao.findByUrl(currentUrl)
             if (exists == null) {
-                val bookmark = BookmarkEntry(
-                    url = currentUrl,
-                    title = tvTitle.text.toString(),
-                    timestamp = System.currentTimeMillis()
+                bookmarkDao.insert(
+                    BookmarkEntry(
+                        url = currentUrl,
+                        title = tvTitle.text.toString().ifBlank { currentUrl },
+                        timestamp = System.currentTimeMillis()
+                    )
                 )
-                bookmarkDao.insert(bookmark)
-                runOnUiThread {
-                    android.widget.Toast.makeText(this, "已收藏", android.widget.Toast.LENGTH_SHORT).show()
-                }
+                runOnUiThread { Toast.makeText(this, "已收藏", Toast.LENGTH_SHORT).show() }
+            } else {
+                runOnUiThread { Toast.makeText(this, "已在收藏夹中", Toast.LENGTH_SHORT).show() }
             }
         }.start()
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
-        if (showingHome) {
-            super.onBackPressed()
-        } else if (webView.canGoBack()) {
-            webView.goBack()
-        } else {
-            showHome()
+        when {
+            showingHome -> super.onBackPressed()
+            webView.canGoBack() -> webView.goBack()
+            else -> showHome()
         }
     }
 
