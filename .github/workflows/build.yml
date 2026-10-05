@@ -20,16 +20,21 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Download Gradle wrapper JAR
-        run: |
-          mkdir -p gradle/wrapper
-          curl -L -o gradle/wrapper/gradle-wrapper.jar "https://raw.githubusercontent.com/gradle/gradle/v8.2.0/gradle/wrapper/gradle-wrapper.jar"
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
 
-      - name: Build with Gradle
-        run: chmod +x gradlew && ./gradlew assembleRelease --no-daemon
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Build release APK
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: List APK output
+        run: find app/build/outputs -name "*.apk" -ls
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-release
           path: app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
