@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#FFFFFF">
+
+    <!-- 顶部栏 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="8dp"
+        android:background="#F5F5F5">
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="浏览器"
+            android:textSize="14sp"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:paddingHorizontal="8dp"/>
+
+        <ImageButton
+            android:id="@+id/btnMenu"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@android:drawable/ic_menu_more"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="菜单"/>
+
+    </LinearLayout>
+
+    <!-- 进度条 -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="@android:style/Widget.ProgressBar.Horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="3dp"
+        android:max="100"
+        android:visibility="gone"/>
+
+    <!-- 地址栏 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:orientation="horizontal"
+        android:paddingHorizontal="8dp"
+        android:gravity="center_vertical"
+        android:background="#F5F5F5">
+
+        <EditText
+            android:id="@+id/etUrl"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:background="@drawable/url_input_bg"
+            android:hint="搜索或输入网址"
+            android:textSize="14sp"
+            android:paddingHorizontal="12dp"
+            android:singleLine="true"
+            android:imeOptions="actionSearch"
+            android:inputType="textUri"/>
+
+    </LinearLayout>
+
+    <!-- 底部工具栏 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:background="#F5F5F5">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:src="@android:drawable/ic_menu_revert"
+            android:background="?attr/selectableItemBackground"
+            android:contentDescription="后退"
+            android:alpha="0.3"/>
+
+        <ImageButton
+            android:id="@+id/btnForward"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:src="@android:drawable/ic_menu_share"
+            android:background="?attr/selectableItemBackground"
+            android:contentDescription="前进"
+            android:alpha="0.3"/>
+
+        <ImageButton
+            android:id="@+id/btnHome"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:src="@android:drawable/ic_menu_home"
+            android:background="?attr/selectableItemBackground"
+            android:contentDescription="主页"/>
+
+        <ImageButton
+            android:id="@+id/btnRefresh"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:src="@android:drawable/ic_menu_rotate"
+            android:background="?attr/selectableItemBackground"
+            android:contentDescription="刷新"/>
+
+        <ImageButton
+            android:id="@+id/btnStop"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:background="?attr/selectableItemBackground"
+            android:contentDescription="停止"
+            android:visibility="gone"/>
+
+    </LinearLayout>
+
+    <!-- WebView -->
+    <WebView
+        android:id="@+id/webView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+</LinearLayout>
