@@ -24,3 +24,7 @@ bin/
 gen/
 out/
 *.log
+.gradle/
+build/
+app/build/
+local.properties

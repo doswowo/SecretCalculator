@@ -27,6 +27,7 @@ class CalculatorActivity : AppCompatActivity() {
     private val history = ArrayList<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        BrowserActivity.applyTheme(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_calculator)
         display = findViewById(R.id.tvDisplay)

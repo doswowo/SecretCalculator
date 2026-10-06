@@ -11,7 +11,8 @@ import androidx.recyclerview.widget.RecyclerView
 
 class BookmarkAdapter(
     private val context: Context,
-    private val onClick: (BookmarkEntry) -> Unit
+    private val onClick: (BookmarkEntry) -> Unit,
+    private val onLongClick: (BookmarkEntry) -> Unit
 ) : ListAdapter<BookmarkEntry, BookmarkAdapter.ViewHolder>(DiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -32,11 +33,12 @@ class BookmarkAdapter(
             tvTitle.text = entry.title
             tvUrl.text = entry.url
             itemView.setOnClickListener { onClick(entry) }
+            itemView.setOnLongClickListener { onLongClick(entry); true }
         }
     }
 
     class DiffCallback : DiffUtil.ItemCallback<BookmarkEntry>() {
-        override fun areItemsTheSame(oldItem: BookmarkEntry, newItem: BookmarkEntry) = oldItem.url == newItem.url
+        override fun areItemsTheSame(oldItem: BookmarkEntry, newItem: BookmarkEntry) = oldItem.id == newItem.id
         override fun areContentsTheSame(oldItem: BookmarkEntry, newItem: BookmarkEntry) = oldItem == newItem
     }
 }

@@ -1,5 +1,6 @@
 package com.secretcalc.browser
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -15,18 +16,24 @@ class HistoryActivity : AppCompatActivity() {
     private lateinit var adapter: HistoryAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        BrowserActivity.applyTheme(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_history)
 
         db = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "browser_db")
             .allowMainThreadQueries()
-            .fallbackToDestructiveMigration()
+            .addMigrations(MIGRATION_1_2)
             .build()
         historyDao = db.historyDao()
 
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
-        adapter = HistoryAdapter(this) { }
+        adapter = HistoryAdapter(this) { entry ->
+            startActivity(Intent(this, BrowserActivity::class.java).apply {
+                putExtra(BrowserActivity.EXTRA_URL, entry.url)
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            })
+        }
         recyclerView.adapter = adapter
         loadHistory()
     }

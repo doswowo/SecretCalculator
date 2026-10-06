@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 class ChangePasswordActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        BrowserActivity.applyTheme(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_change_password)
 

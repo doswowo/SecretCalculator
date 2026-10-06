@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="browser_bg">#141416</color>
+    <color name="bar_bg">#1E1E21</color>
+    <color name="text_main">#E8E8EA</color>
+    <color name="text_secondary">#9A9AA0</color>
+    <color name="accent_link">#4DA3FF</color>
+    <color name="tile_bg">#26262A</color>
+    <color name="input_bg">#26262A</color>
+    <color name="input_stroke">#3A3A40</color>
+</resources>

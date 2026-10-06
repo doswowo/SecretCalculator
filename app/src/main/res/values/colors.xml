@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="browser_bg">#FFFFFF</color>
+    <color name="bar_bg">#F5F5F5</color>
+    <color name="text_main">#333333</color>
+    <color name="text_secondary">#666666</color>
+    <color name="accent_link">#007AFF</color>
+    <color name="tile_bg">#F5F5F5</color>
+    <color name="input_bg">#FFFFFF</color>
+    <color name="input_stroke">#DDDDDD</color>
+</resources>
